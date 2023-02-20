@@ -51,6 +51,21 @@ namespace cex2string
                             num++;
                             
                         }
+                        
+                        if (method.Body.Instructions[i].OpCode == OpCodes.Call &&
+                            method.Body.Instructions[i].Operand.ToString().Contains("Int32>") &&
+                            method.Body.Instructions[i].Operand is MethodSpec &&
+                            method.Body.Instructions[i - 1].IsLdcI4())
+                        {
+                            MethodSpec methodSpec = method.Body.Instructions[i].Operand as MethodSpec;
+                            int ldcI4Value = (int)method.Body.Instructions[i - 1].GetLdcI4Value();
+                            int value = (int)manifestModule.ResolveMethod(methodSpec.MDToken.ToInt32()).Invoke(null, new object[] { ldcI4Value });
+                            method.Body.Instructions[i].OpCode = OpCodes.Nop;
+                            method.Body.Instructions[i - 1].OpCode = OpCodes.Ldc_I4;
+                            method.Body.Instructions[i - 1].Operand = value;
+                            num++;
+
+                        }
                     }
                 }
             }
